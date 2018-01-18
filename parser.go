@@ -306,24 +306,27 @@ func buildGoStruct(source []byte, file *GoFile, info *types.Info, typeSpec *ast.
 	// Field: A Field declaration list in a struct type, a method list in an interface type,
 	// or a parameter/result declaration in a signature: https://golang.org/pkg/go/ast/#Field
 	for _, field := range structType.Fields.List {
-		for _, name := range field.Names {
-			goField := &GoField{
-				Struct: goStruct,
-				Name:   name.String(),
-				Type:   string(source[field.Type.Pos()-1 : field.Type.End()-1]),
-			}
-
-			if field.Tag != nil {
-				goTag := &GoTag{
-					Field: goField,
-					Value: field.Tag.Value,
-				}
-
-				goField.Tag = goTag
-			}
-
-			goStruct.Fields = append(goStruct.Fields, goField)
+		var name string
+		if field.Names != nil && len(field.Names) > 0 {
+			name = field.Names[0].Name
 		}
+		goField := &GoField{
+			Struct: goStruct,
+			Name:   name,
+			Type:   string(source[field.Type.Pos()-1 : field.Type.End()-1]),
+		}
+
+		goTag := &GoTag{
+			Field: goField,
+		}
+
+		if field.Tag != nil {
+			goTag.Value = field.Tag.Value
+		}
+
+		goField.Tag = goTag
+
+		goStruct.Fields = append(goStruct.Fields, goField)
 	}
 
 	return goStruct
